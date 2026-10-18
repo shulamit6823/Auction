@@ -1,0 +1,18 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build output
+bin/
+obj/
+
+# User Secrets
+secrets.json
+
+# Test results
+TestResults/
+
+# OS files
+.DS_Store
+Thumbs.db
