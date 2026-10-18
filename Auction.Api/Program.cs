@@ -1,4 +1,5 @@
 using Auction.Api.BackgroundServices;
+using Auction.Api.Configuration;
 using Auction.Api.Middlewares;
 using Auction.Core.Interfaces;
 using Auction.Core.Mapping;
@@ -9,6 +10,7 @@ using Auction.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -22,8 +24,18 @@ builder.Host.UseNLog();
 
 // Add services to the container.
 
-builder.Services.AddDbContext<AuctionDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Locally the connection string comes from User Secrets; on Render - from an environment variable (as a URL).
+var connectionString = DatabaseUrl.ToConnectionString(builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty);
+builder.Services.AddDbContext<AuctionDbContext>(options => options.UseNpgsql(connectionString));
+
+// On Render, HTTPS ends at Render's proxy and the request reaches us as HTTP.
+// The proxy sends the original scheme in X-Forwarded-Proto - this makes ASP.NET use it.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear(); // the proxy address is not known in advance
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
@@ -95,6 +107,14 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// On Render there is no Package Manager Console - the Migrations are applied when the app starts.
+// Locally this stays off (Update-Database is run by hand, as before).
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AuctionDbContext>().Database.MigrateAsync();
+}
+
 // Development only (Seed:Enabled is in appsettings.Development.json): fills an empty DB with demo data.
 // The demo users' password is not in the code - it is in User Secrets:
 // dotnet user-secrets set "Seed:Password" "<password>" --project Auction.Api
@@ -119,6 +139,7 @@ if (app.Configuration.GetValue<bool>("Seed:Enabled"))
 // 1. RequestLogging - outermost: sees every request and the final status code (also a 500).
 // 2. ErrorHandling  - inside it: turns any unhandled exception into a 500 response,
 //    so RequestLogging logs "finished: 500" instead of a crash.
+app.UseForwardedHeaders();
 app.UseRequestLogging();
 app.UseErrorHandling();
 
@@ -131,12 +152,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// The React app (built into wwwroot by the Dockerfile) is served by the same server - one address, no CORS.
+// Before authentication: the site files are public. Locally there is no wwwroot
+// (React runs on its own with npm run dev), so these lines do nothing.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // Order matters: first find out WHO the user is (reads the JWT and fills HttpContext.User),
 // then check WHAT they are allowed to do ([Authorize]).
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// An unknown /api address stays a real 404 (JSON), and every other address
+// (e.g. /auctions/5 after a page refresh) gets index.html, so React Router can show the page.
+app.MapFallback("/api/{**path}", () => Results.NotFound());
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

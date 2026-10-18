@@ -1,4 +1,85 @@
-=== העלאה ל-GitHub - בתהליך ===
+=== העלאה ל-Render - תוכנית ושאלות ===
 
-לפי STUDENT_NOTES.txt: תשובה א - לעדכן את ה-commit הראשון.
-ה-commit עודכן. סיסמת הדמו כבר לא מופיעה בו (היא ב-User Secrets).
+לפי STUDENT_NOTES.txt: "צריכה גם להעלות ל-RENDER, עדיין אין לי חשבון".
+
+=== מה את עושה עכשיו: פתיחת חשבון ===
+1. https://render.com -> Get Started
+2. הירשמי עם הכפתור "GitHub" (חשבון shulamit6823) - כך Render יראה את ה-Repository.
+3. בתוכנית החינמית לא אמור להידרש כרטיס אשראי.
+
+=== מה אני מכין בינתיים (אחרי התשובות שלך) ===
+ב-Render אין תמיכה ישירה ב-.NET, לכן:
+- Dockerfile - בונה את ה-React ואת ה-API לקונטיינר אחד.
+- render.yaml (Blueprint) - Render יוצר לבד את ה-DB ואת השרת.
+  את רק לוחצת New -> Blueprint ובוחרת את Auction.
+- Program.cs - שינויים קטנים לסביבת Production:
+  * קריאת כתובת ה-DB ש-Render נותן (פורמט postgres://...)
+  * Migrations אוטומטיים בעלייה (אין שם Package Manager Console)
+  * הפורט ש-Render קובע, ו-HTTPS שמטופל אצל Render
+- ה-React יקרא ל-API באותה כתובת - בלי Proxy ובלי CORS.
+- הסודות (Jwt:Key, סיסמת ה-DB) - רק כ-Environment Variables ב-Render.
+  Render מייצר אותם בעצמו. שום סוד לא נכנס ל-Git.
+
+=== מגבלות התוכנית החינמית - כדאי לדעת ===
+- השרת "נרדם" אחרי ~15 דקות בלי שימוש. הכניסה הראשונה אחרי זה לוקחת כדקה.
+  בזמן השינה גם שירות סגירת המכירות לא רץ (הוא ירוץ כשהשרת יתעורר).
+- PostgreSQL החינמי של Render נמחק אחרי 30 יום (אפשר ליצור חדש).
+
+=== שאלות ===
+1. מבנה:
+   א. (מומלץ) שירות אחד: ה-API מגיש גם את ה-React. כתובת אחת, בלי CORS.
+   ב. שני שירותים: React כ-Static Site + API נפרד (צריך CORS ושתי כתובות).
+2. נתונים ב-Render:
+   א. (מומלץ) כמו אצלך - admin + משתמשי דמו + מכירות לדוגמה,
+      כדי שהמרצה תוכל להיכנס ולנסות. הסיסמה תוגדר כ-Secret ב-Render.
+   ב. רק משתמש admin, בלי נתוני דמו.
+
+כתבי ב-STUDENT_NOTES.txt למשל: "1א 2א", ואז "עניתי".
+אחרי זה אכין הכול, אריץ בדיקות, אעשה commit + push,
+ואכתוב לך בדיוק על מה ללחוץ ב-Render.
+
+=== Render - מה לבחור במסך "Create a new workspace" ===
+
+לפי STUDENT_NOTES.txt: שאלת מה לעשות במסך יצירת ה-workspace.
+(לא דרסתי - ההוראות הקודמות נשארו למעלה.)
+
+- What would you like to call your workspace?  -> אפשר להשאיר "My workspace",
+  או לכתוב Auction. זה רק שם, לא משנה כלום.
+- What will you use this workspace for?  -> Personal projects
+- How many developers...?  -> Just me
+- ואז הכפתור להמשך (Continue / Create workspace).
+
+אם אחרי זה הוא שואל על תוכנית/מחיר - לבחור Hobby / Free.
+אם מבקשים לחבר GitHub - לאשר (חשבון shulamit6823).
+עדיין לא ליצור שום שירות (Web Service / Postgres) - את זה נעשה יחד דרך ה-Blueprint.
+
+ועדיין מחכה לתשובות לשאלות 1 ו-2 שלמעלה (למשל "1א 2א").
+
+=== Render - מסך "Tell us about what you're building" ===
+
+לפי STUDENT_NOTES.txt: שאלת מה לבחור.
+
+שתי השאלות במסך הזה אופציונליות (Optional) - הן רק לסקר, לא משפיעות על כלום.
+- אפשר פשוט ללחוץ Finish בלי לבחור.
+- אם רוצים לבחור: Side project, ובשאלה השנייה לא לבחור כלום.
+
+אחרי Finish תגיעי ללוח הבקרה (Dashboard) של Render. שם לעצור - לא ליצור שירות.
+
+ועדיין מחכה לתשובות לשאלות 1 ו-2 שלמעלה (למשל "1א 2א").
+
+=== Render - מסך "Create a new Service" ===
+
+לפי STUDENT_NOTES.txt: הגעת ל-"Create a new Service".
+
+כרגע לא ללחוץ על כלום במסך הזה. אפשר להשאיר אותו פתוח או לסגור.
+עוד אין ב-GitHub את הקבצים ש-Render צריך (Dockerfile ו-render.yaml) -
+אני מכין אותם אחרי שתעני על 2 השאלות.
+כשהם יהיו מוכנים, תבחרי שם "Blueprint" ואכתוב לך בדיוק מה ללחוץ.
+
+=== חסר רק זה ממך ===
+בשאלות שלמעלה (בתחילת הקובץ):
+1. מבנה: א (מומלץ) = שירות אחד, או ב = שני שירותים
+2. נתונים: א (מומלץ) = כמו אצלך עם משתמשי דמו, או ב = רק admin
+
+כתבי ב-STUDENT_NOTES.txt למשל "1א 2א", ואז "עניתי".
+(אם תכתבי רק "מומלץ" - אבחר 1א 2א.)

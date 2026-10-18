@@ -1,0 +1,34 @@
+# Render Blueprint: creates the PostgreSQL DB and the web service (Dockerfile) together.
+# No secret is written here - Render generates them or asks for them when the Blueprint is created.
+databases:
+  - name: auction-db
+    plan: free
+    region: frankfurt
+    databaseName: auction
+    user: auction
+
+services:
+  - type: web
+    name: auction
+    runtime: docker
+    plan: free
+    region: frankfurt # must be the same region as the DB
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/auctions
+    envVars:
+      # The DB address (with its password) - filled by Render from auction-db.
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: auction-db
+          property: connectionString
+      # A random JWT key, generated once by Render.
+      - key: Jwt__Key
+        generateValue: true
+      - key: Database__MigrateOnStartup
+        value: "true"
+      # Demo data (admin + demo users + sample auctions) on the first start.
+      - key: Seed__Enabled
+        value: "true"
+      # The demo users' password: Render asks for it when the Blueprint is created.
+      - key: Seed__Password
+        sync: false
