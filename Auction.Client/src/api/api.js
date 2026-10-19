@@ -73,6 +73,8 @@ export const api = {
   getAllAuctions: () => request('GET', '/api/auctions/all'),
   getMyAuctions: () => request('GET', '/api/auctions/mine'),
   getAuction: (id) => request('GET', `/api/auctions/${id}`),
+  // Seller's and winner's emails of a closed auction - the server returns them only to those two and an Admin.
+  getAuctionContact: (id) => request('GET', `/api/auctions/${id}/contact`),
   createAuction: (auction) => request('POST', '/api/auctions', auction),
   updateAuction: (id, auction) => request('PUT', `/api/auctions/${id}`, auction),
   cancelAuction: (id) => request('DELETE', `/api/auctions/mine/${id}`),

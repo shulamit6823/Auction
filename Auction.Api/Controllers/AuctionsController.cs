@@ -86,6 +86,31 @@ public class AuctionsController : ApiControllerBase
         }
     }
 
+    // Contact details of the seller and the winner of a closed auction - only for the two of them and an Admin.
+    [HttpGet("{id:int}/contact")]
+    public async Task<ActionResult<AuctionContactResponse>> GetContact([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        if (CurrentUserId is not int userId)
+            return Unauthorized();
+
+        try
+        {
+            return Ok(_mapper.Map<AuctionContactResponse>(await _auctionService.GetContactAsync(id, userId, IsAdmin, cancellationToken)));
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFoundProblem(ex.Message);
+        }
+        catch (ForbiddenException ex)
+        {
+            return ForbiddenProblem(ex.Message);
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequestProblem(ex.Message);
+        }
+    }
+
     // The seller edits their auction before it is approved. Same fields as Create.
     [HttpPut("{id:int}")]
     public async Task<ActionResult<AuctionResponse>> Update([FromRoute] int id, [FromBody] CreateAuctionRequest request)

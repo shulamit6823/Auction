@@ -193,6 +193,50 @@ public class AuctionServiceTests
         _auctionRepository.Verify(r => r.Remove(auction), Times.Once);
     }
 
+    // ---------- Contact details after closing ----------
+
+    private const int WinnerId = 7;
+
+    private Auction SetupClosedAuction(AuctionStatus status = AuctionStatus.Closed)
+    {
+        return SetupAuction(new Auction
+        {
+            Id = 1, Status = status, SellerId = SellerId, WinnerId = WinnerId,
+            Seller = new User { Id = SellerId, Username = "seller", Email = "seller@test.com" },
+            Winner = new User { Id = WinnerId, Username = "winner", Email = "winner@test.com" }
+        });
+    }
+
+    [Theory]
+    [InlineData(SellerId, false)] // the seller
+    [InlineData(WinnerId, false)] // the winner
+    [InlineData(50, true)]        // an Admin
+    public async Task GetContact_SellerWinnerOrAdmin_GetsBothEmails(int viewerId, bool isAdmin)
+    {
+        SetupClosedAuction();
+
+        var contact = await _service.GetContactAsync(1, viewerId, isAdmin);
+
+        Assert.Equal("seller@test.com", contact.Seller.Email);
+        Assert.Equal("winner@test.com", contact.Winner.Email);
+    }
+
+    [Fact]
+    public async Task GetContact_SomeoneElse_ThrowsForbidden()
+    {
+        SetupClosedAuction();
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => _service.GetContactAsync(1, viewerId: 3, viewerIsAdmin: false));
+    }
+
+    [Fact]
+    public async Task GetContact_AuctionStillActive_Throws()
+    {
+        SetupClosedAuction(AuctionStatus.Active);
+
+        await Assert.ThrowsAsync<BusinessRuleException>(() => _service.GetContactAsync(1, SellerId, viewerIsAdmin: false));
+    }
+
     // ---------- Delete (Admin restriction) ----------
 
     [Fact]

@@ -15,6 +15,7 @@ public class MappingProfile : Profile
         CreateMap<Bid, BidResponse>();
         CreateMap<LoginResult, LoginResponse>();
         CreateMap<UserBidSummary, MyBidResponse>();
+        CreateMap<AuctionContact, AuctionContactResponse>();
     }
 }
 

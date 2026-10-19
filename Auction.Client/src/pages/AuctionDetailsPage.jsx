@@ -116,11 +116,40 @@ function AuctionState({ auction, isOpen, bids, user }) {
     return <div className="alert alert-info">המכירה נסגרה ללא הצעות.</div>;
 
   const winnerName = bids.find((b) => b.bidderId === auction.winnerId)?.bidderUsername;
+  // The seller, the winner and an Admin also get the contact details (loaded separately).
+  const canSeeContact = user && (user.id === auction.sellerId || user.id === auction.winnerId || user.role === 'Admin');
   return (
     <div className="alert alert-winner">
       {auction.winnerId === user?.id
         ? `זכית במכירה! מחיר סופי: ${formatPrice(auction.currentPrice)}`
         : `הזוכה: ${winnerName} - מחיר סופי: ${formatPrice(auction.currentPrice)}`}
+      {canSeeContact && <ContactDetails auctionId={auction.id} user={user} />}
+    </div>
+  );
+}
+
+function ContactDetails({ auctionId, user }) {
+  const { data: contact, error } = useLoad(() => api.getAuctionContact(auctionId), [auctionId]);
+
+  if (error) return <p className="contact muted small">{error}</p>;
+  if (!contact) return null;
+
+  const isWinner = user.username === contact.winnerUsername;
+  const isSeller = user.username === contact.sellerUsername;
+  return (
+    <div className="contact">
+      {!isWinner && (
+        <p>
+          {isSeller ? 'צרו קשר עם הזוכה: ' : 'הזוכה: '}
+          <a href={`mailto:${contact.winnerEmail}`}>{contact.winnerEmail}</a>
+        </p>
+      )}
+      {!isSeller && (
+        <p>
+          {isWinner ? 'צרו קשר עם המוכר: ' : 'המוכר: '}
+          <a href={`mailto:${contact.sellerEmail}`}>{contact.sellerEmail}</a>
+        </p>
+      )}
     </div>
   );
 }

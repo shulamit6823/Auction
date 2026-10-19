@@ -18,6 +18,10 @@ public interface IAuctionService
     // Seller only, while the auction is Pending or Rejected (nobody could bid yet) - removes it.
     Task CancelAsync(int id, int sellerId);
 
+    // After a closed auction with a winner: the seller's and winner's contact details.
+    // Only for the seller, the winner or an Admin (ForbiddenException for anyone else).
+    Task<AuctionContact> GetContactAsync(int id, int viewerId, bool viewerIsAdmin, CancellationToken cancellationToken = default);
+
     Task<Auction> ApproveAsync(int id);
     Task<Auction> RejectAsync(int id, string reason);
     Task DeleteAsync(int id);

@@ -186,6 +186,17 @@ public class AuctionService : IAuctionService
         return auction;
     }
 
+    public async Task<AuctionContact> GetContactAsync(int id, int viewerId, bool viewerIsAdmin, CancellationToken cancellationToken = default)
+    {
+        var auction = await GetVisibleByIdAsync(id, viewerId, viewerIsAdmin, cancellationToken);
+        if (auction.Status != AuctionStatus.Closed || auction.Winner == null)
+            throw new BusinessRuleException("פרטי הקשר זמינים רק אחרי שהמכירה נסגרה עם זוכה.");
+        if (!viewerIsAdmin && viewerId != auction.SellerId && viewerId != auction.WinnerId)
+            throw new ForbiddenException("פרטי הקשר זמינים רק למוכר ולזוכה.");
+
+        return new AuctionContact { Seller = auction.Seller, Winner = auction.Winner };
+    }
+
     public async Task<Auction> RejectAsync(int id, string reason)
     {
         reason = reason?.Trim() ?? string.Empty;
