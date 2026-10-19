@@ -83,3 +83,39 @@
 
 כתבי ב-STUDENT_NOTES.txt למשל "1א 2א", ואז "עניתי".
 (אם תכתבי רק "מומלץ" - אבחר 1א 2א.)
+
+=== Render - הקבצים מוכנים ב-GitHub. עכשיו את (הוראות חדשות) ===
+
+לפי STUDENT_NOTES.txt: "מומלץ" = 1א (שירות אחד) + 2א (עם נתוני דמו).
+
+--- מה שיניתי (commit חדש, הועלה ל-GitHub) ---
+- חדש: Dockerfile - בונה React + API לקונטיינר אחד
+- חדש: render.yaml - Blueprint: DB + שרת, ב-Frankfurt, תוכנית Free
+- חדש: .dockerignore
+- חדש: Auction.Api/Configuration/DatabaseUrl.cs - ממיר את כתובת ה-DB של Render
+- Program.cs: Migrations בעלייה (רק כשמוגדר), הגשת ה-React מ-wwwroot,
+  כתובת /api לא קיימת -> 404, ForwardedHeaders בשביל ה-HTTPS של Render
+- חדש: Tests/Unit/DatabaseUrlTests.cs
+62/62 בדיקות עברו.
+Docker Desktop לא עלה אצלך, אז בדקתי בלי Docker: הרצתי את השרת
+במצב Production מול DB זמני (נמחק אחרי הבדיקה):
+Migrations + נתוני דמו נוצרו, האתר וה-API עובדים, Login של admin עובד,
+Swagger לא חשוף ב-Production.
+אין סודות ב-GitHub: הסיסמאות והמפתח נוצרים/נשאלים ב-Render.
+
+--- מה ללחוץ ב-Render ---
+1. ב-Dashboard: הכפתור "+ New" (למעלה) -> "Blueprint".
+2. בחרי את ה-Repository: shulamit6823/Auction
+   (אם הוא לא מופיע: "Configure account" / "Connect GitHub" ותני גישה ל-Auction).
+3. Blueprint Name: Auction. Branch: main.
+4. Render יציג 2 משאבים: auction-db (PostgreSQL) ו-auction (Web Service).
+5. הוא יבקש ערך ל-Seed__Password:
+   זו הסיסמה של admin, dana, yossi ו-noa באתר ב-Render.
+   בחרי סיסמה חדשה (לא סיסמה אמיתית שלך) ושמרי אותה - איתה תתחברי ותיתני למרצה.
+   אל תכתבי אותה ב-STUDENT_NOTES.txt.
+6. "Apply" / "Deploy Blueprint".
+7. הבנייה הראשונה לוקחת בערך 5-10 דקות. בסוף, בדף של השירות "auction"
+   תופיע כתובת כמו https://auction-xxxx.onrender.com
+
+--- ואז ---
+כתבי ב-STUDENT_NOTES.txt את הכתובת (או "נכשל" + השורות האדומות מה-Logs), ואז "עניתי".
